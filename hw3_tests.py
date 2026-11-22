@@ -2,6 +2,8 @@ import data
 import build_data
 import unittest
 
+import hw_3
+
 
 # These two values are defined to support testing below. The
 # data within these structures should not be modified. Doing
@@ -176,34 +178,172 @@ reduced_data = [
     ]
 
 class TestCases(unittest.TestCase):
-    pass
 
-    # Part 1
-    # test population_total
+    def test_population_total_empty(self):
+        self.assertEqual(hw_3.population_total([]), 0)
 
-    # Part 2
-    # test filter_by_state
+    def test_population_total_single_county(self):
+        self.assertEqual(hw_3.population_total([reduced_data[2]]), 279083)
 
+    def test_population_total_reduced_data(self):
+        self.assertEqual(hw_3.population_total(reduced_data), 655813)
+
+    def test_population_total_full_data(self):
+        self.assertEqual(hw_3.population_total(full_data), 318857056)
+
+    def test_filter_by_state_ca_reduced(self):
+        ca_counties = hw_3.filter_by_state(reduced_data, 'CA')
+        self.assertCountEqual(
+            [county.county for county in ca_counties],
+            ['San Luis Obispo County', 'Yolo County']
+        )
+
+    def test_filter_by_state_present_other_reduced(self):
+        wy_counties = hw_3.filter_by_state(reduced_data, 'WY')
+        self.assertCountEqual(
+            [county.county for county in wy_counties],
+            ['Weston County']
+        )
+
+    def test_filter_by_state_absent_reduced(self):
+        self.assertEqual(hw_3.filter_by_state(reduced_data, 'TX'), [])
+
+    def test_filter_by_state_ca_full_count(self):
+        ca_counties = hw_3.filter_by_state(full_data, 'CA')
+        self.assertEqual(len(ca_counties), 58)
     # Part 3
     # test population_by_education
     # test population_by_ethnicity
     # test population_below_poverty_level
 
     # Part 4
-    # test percent_by_education
-    # test percent_by_ethnicity
-    # test percent_below_poverty_level
+    def test_percent_by_education_single_county(self):
+        result = hw_3.percent_by_education([reduced_data[2]], "Bachelor's Degree or Higher")
+        self.assertAlmostEqual(result, 31.5)
+
+    def test_percent_by_education_population_weighted(self):
+        result = hw_3.percent_by_education(
+            [reduced_data[2], reduced_data[3]],
+            "Bachelor's Degree or Higher"
+        )
+        self.assertAlmostEqual(result, 34.230, places=3)
+
+    def test_percent_by_education_missing_and_empty(self):
+        self.assertEqual(hw_3.percent_by_education(reduced_data, 'Invalid Key'), 0)
+        self.assertEqual(hw_3.percent_by_education([], "Bachelor's Degree or Higher"), 0.0)
+
+    def test_percent_by_education_full_data_missing_key(self):
+        self.assertEqual(hw_3.percent_by_education(full_data, 'Invalid Key'), 0)
+
+    def test_percent_by_ethnicity_single_county(self):
+        result = hw_3.percent_by_ethnicity([reduced_data[2]], 'Hispanic or Latino')
+        self.assertAlmostEqual(result, 22.0)
+
+    def test_percent_by_ethnicity_population_weighted(self):
+        result = hw_3.percent_by_ethnicity(
+            [reduced_data[2], reduced_data[3]],
+            'Hispanic or Latino'
+        )
+        self.assertAlmostEqual(result, 26.052, places=3)
+
+    def test_percent_by_ethnicity_missing_and_empty(self):
+        self.assertEqual(hw_3.percent_by_ethnicity(reduced_data, 'Invalid Key'), 0)
+        self.assertEqual(hw_3.percent_by_ethnicity([], 'Hispanic or Latino'), 0.0)
+
+    def test_percent_below_poverty_level_single_county(self):
+        result = hw_3.percent_below_poverty_level([reduced_data[2]])
+        self.assertAlmostEqual(result, 14.3)
+
+    def test_percent_below_poverty_level_population_weighted(self):
+        result = hw_3.percent_below_poverty_level(
+            [reduced_data[2], reduced_data[3]]
+        )
+        self.assertAlmostEqual(result, 16.347436368978762, places=3)
+
+    def test_percent_below_poverty_level_empty(self):
+        self.assertEqual(hw_3.percent_below_poverty_level([]), 0.0)
+
+    def test_percent_below_poverty_level_reduced_data(self):
+        result = hw_3.percent_below_poverty_level(reduced_data)
+        self.assertAlmostEqual(result, 16.424150481920915, places=3)
 
     # Part 5
-    # test education_greater_than
-    # test education_less_than
-    # test ethnicity_greater_than
-    # test ethnicity_less_than
-    # test below_poverty_level_greater_than
-    # test below_poverty_level_less_than
+    def test_education_greater_than_strict_and_equal(self):
+        counties = hw_3.education_greater_than(
+            reduced_data, "Bachelor's Degree or Higher", 31.5
+        )
+        self.assertCountEqual(
+            [county.county for county in counties],
+            ['Yolo County']
+        )
 
+    def test_education_less_than_strict_and_equal(self):
+        counties = hw_3.education_less_than(
+            reduced_data, "Bachelor's Degree or Higher", 31.5
+        )
+        self.assertCountEqual(
+            [county.county for county in counties],
+            ['Autauga County', 'Crawford County', 'Butte County',
+             'Pettis County', 'Weston County']
+        )
+
+    def test_education_threshold_missing_key_and_empty(self):
+        self.assertEqual(
+            hw_3.education_greater_than(reduced_data, 'Invalid Key', 0), []
+        )
+        self.assertEqual(
+            hw_3.education_less_than([], "Bachelor's Degree or Higher", 100), []
+        )
+
+    def test_ethnicity_greater_than_strict_and_equal(self):
+        counties = hw_3.ethnicity_greater_than(
+            reduced_data, 'Hispanic or Latino', 22.0
+        )
+        self.assertCountEqual(
+            [county.county for county in counties],
+            ['Yolo County']
+        )
+
+    def test_ethnicity_less_than_strict_and_equal(self):
+        counties = hw_3.ethnicity_less_than(
+            reduced_data, 'Hispanic or Latino', 22.0
+        )
+        self.assertCountEqual(
+            [county.county for county in counties],
+            ['Autauga County', 'Crawford County', 'Butte County',
+             'Pettis County', 'Weston County']
+        )
+
+    def test_ethnicity_threshold_missing_key_and_empty(self):
+        self.assertEqual(
+            hw_3.ethnicity_greater_than(reduced_data, 'Invalid Key', 0), []
+        )
+        self.assertEqual(
+            hw_3.ethnicity_less_than([], 'Hispanic or Latino', 100), []
+        )
+
+    def test_below_poverty_level_greater_than_strict_and_equal(self):
+        counties = hw_3.below_poverty_level_greater_than(reduced_data, 14.3)
+        self.assertCountEqual(
+            [county.county for county in counties],
+            ['Crawford County', 'Yolo County', 'Pettis County', 'Butte County']
+        )
+
+    def test_below_poverty_level_less_than_strict_and_equal(self):
+        counties = hw_3.below_poverty_level_less_than(reduced_data, 14.3)
+        self.assertCountEqual(
+            [county.county for county in counties],
+            ['Autauga County', 'Weston County']
+        )
+
+    def test_below_poverty_threshold_no_match_and_empty(self):
+        self.assertEqual(
+            hw_3.below_poverty_level_greater_than(reduced_data, 100), []
+        )
+        self.assertEqual(
+            hw_3.below_poverty_level_less_than([], 100), []
+        )
 
 
 if __name__ == '__main__':
     unittest.main()
-
